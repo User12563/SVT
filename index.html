@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Survivre à une éruption volcanique</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .phase { margin: 20px 0; }
+        button { margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Survivre à une éruption volcanique</h1>
+    <div id="game">
+        <div class="phase" id="phase1">
+            <h2>Phase 1 : Préparation</h2>
+            <p>Constituer un kit d'urgence. Quels objets voulez-vous inclure ?</p>
+            <input type="text" id="kitInput" placeholder="Entrez les objets ici">
+            <button onclick="submitKit()">Soumettre</button>
+            <p id="kitMessage"></p>
+        </div>
+        <div class="phase" id="phase2" style="display:none;">
+            <h2>Phase 2 : Pendant l'éruption</h2>
+            <p>Voulez-vous évacuer maintenant ?</p>
+            <button onclick="evacuer('oui')">Oui</button>
+            <button onclick="evacuer('non')">Non</button>
+            <p id="evacMessage"></p>
+        </div>
+        <div class="phase" id="phase3" style="display:none;">
+            <h2>Phase 3 : Après l'éruption</h2>
+            <p>Comment allez-vous nettoyer les cendres ?</p>
+            <button onclick="nettoyer('avec un masque')">Avec un masque</button>
+            <button onclick="nettoyer('sans masque')">Sans masque</button>
+            <p id="cleanMessage"></p>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
