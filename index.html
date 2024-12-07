@@ -391,5 +391,383 @@
         // Attach initialization when DOM is fully loaded
         document.addEventListener('DOMContentLoaded', initApplication);
     </script>
+    
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Food Trucks</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <style>
+        /* Design System */
+        :root {
+            --couleur-fond-principal: #121212;
+            --couleur-primaire: #bb86fc;
+            --couleur-secondaire: #03dac6;
+            --couleur-surface: #1e1e1e;
+            --degradé-principal: linear-gradient(45deg, #bb86fc, #03dac6);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--couleur-fond-principal);
+            color: white;
+        }
+
+        .conteneur-principal {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+
+        .sidebar {
+            background: var(--couleur-surface);
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .menu-navigation .item-menu {
+            display: block;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .item-menu:hover,
+        .item-menu.active {
+            background: var(--couleur-primaire);
+            color: black;
+        }
+
+        .contenu-page {
+            display: none;
+        }
+
+        .contenu-page.active {
+            display: block;
+        }
+
+        #carte-food-trucks {
+            height: 400px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .carte-food-truck {
+            background: var(--couleur-surface);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .bouton {
+            background: var(--degradé-principal);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            color: black;
+            cursor: pointer;
+        }
+
+        .bouton:hover {
+            opacity: 0.9;
+        }
+
+        .food-item {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            background-color: var(--couleur-surface);
+            padding: 15px;
+            border-radius: 5px;
+        }
+
+        .food-desc {
+            flex: 1;
+        }
+
+        .food-desc-price {
+            font-weight: bold;
+        }
+
+        .add-btn {
+            background: #bb86fc;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .add-btn:hover {
+            background: #03dac6;
+        }
+
+        .panier {
+            background: var(--couleur-surface);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .panier ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .panier li {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .favoris-container {
+            background: var(--couleur-surface);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .recu {
+            background-color: var(--couleur-surface);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="conteneur-principal">
+        <aside class="sidebar">
+            <nav class="menu-navigation">
+                <div class="item-menu active" data-page="carte">🗺️ Carte</div>
+                <div class="item-menu" data-page="commandes">🍽️ Mes Commandes</div>
+                <div class="item-menu" data-page="favoris">❤️ Commandes Préférées</div>
+                <div class="item-menu" data-page="plats">🍔 Plats</div>
+            </nav>
+        </aside>
+        <main>
+            <section id="carte" class="contenu-page active">
+                <h2>Carte des Food Trucks</h2>
+                <div id="carte-food-trucks"></div>
+            </section>
+            <section id="commandes" class="contenu-page">
+                <h2>Mes Commandes</h2>
+                <div class="panier" id="panier">
+                    <h3>Panier</h3>
+                    <ul id="panier-list"></ul>
+                    <div>
+                        <strong>Total: </strong>
+                        <span id="total-price">0€</span>
+                    </div>
+                    <button id="valider-commande" class="bouton" onclick="validerCommande()">Valider la commande</button>
+                </div>
+            </section>
+            <section id="favoris" class="contenu-page">
+                <h2>Commandes Préférées</h2>
+                <div class="favoris-container" id="favoris-list"></div>
+            </section>
+            <section id="plats" class="contenu-page">
+                <h2>Plats Disponibles</h2>
+                <div id="plats-list"></div>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // Données des Food Trucks
+        const foodTrucks = {
+            "Food Truck Courbevoie": {
+                position: [48.8997, 2.3096],
+                plats: [
+                    { nom: 'Burger', type: 'Fast Food', prix: 8 },
+                    { nom: 'Frites', type: 'Accompagnement', prix: 3 },
+                    { nom: 'Pizza', type: 'Pizzeria', prix: 10 },
+                    { nom: 'Tacos', type: 'Mexicain', prix: 7 }
+                ]
+            },
+            "Food Truck Paris": {
+                position: [48.8566, 2.3522],
+                plats: [
+                    { nom: 'Sushi', type: 'Japonais', prix: 12 },
+                    { nom: 'Tempura', type: 'Japonais', prix: 10 }
+                ]
+            }
+        };
+
+        // Variables globales
+        let currentFoodTruck = null;
+        let panier = [];
+        let favoris = [];
+
+        // Navigation entre pages
+        function setupNavigation() {
+            const menuItems = document.querySelectorAll('.item-menu');
+            const pages = document.querySelectorAll('.contenu-page');
+            
+            menuItems.forEach(item => {
+                item.addEventListener('click', () => {
+                    menuItems.forEach(menu => menu.classList.remove('active'));
+                    item.classList.add('active');
+                    
+                    const targetPage = item.dataset.page;
+                    pages.forEach(page => page.classList.remove('active'));
+                    document.getElementById(targetPage).classList.add('active');
+                });
+            });
+        }
+
+        // Initialisation de la carte
+        function initCarte() {
+            const map = L.map('carte-food-trucks').setView([48.8997, 2.3096], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+            Object.keys(foodTrucks).forEach(truck => {
+                const truckData = foodTrucks[truck];
+                L.marker(truckData.position)
+                    .addTo(map)
+                    .bindPopup(`<b>${truck}</b>`)
+                    .on('click', () => afficherPlats(truck));
+            });
+        }
+
+        // Afficher les plats d'un food truck
+        function afficherPlats(foodTruck) {
+            currentFoodTruck = foodTruck;
+            const platsList = document.getElementById('plats-list');
+            platsList.innerHTML = '';
+
+            const plats = foodTrucks[foodTruck].plats;
+            plats.forEach(plat => {
+                const platDiv = document.createElement('div');
+                platDiv.classList.add('food-item');
+                platDiv.innerHTML = `
+                    <div class="food-desc">
+                        <h4>${plat.nom}</h4>
+                        <p>${plat.type}</p>
+                        <p class="food-desc-price">${plat.prix}€</p>
+                    </div>
+                    <div>
+                        <button class="add-btn" onclick="ajouterAuPanier('${plat.nom}', ${plat.prix})">Ajouter</button>
+                        <button class="add-btn" onclick="ajouterAuxFavoris('${plat.nom}', ${plat.prix})">❤️</button>
+                    </div>
+                `;
+                platsList.appendChild(platDiv);
+            });
+        }
+
+        // Ajouter au panier
+        function ajouterAuPanier(nom, prix) {
+            if (panier.length > 0 && panier[0].foodTruck !== currentFoodTruck) {
+                alert("Vous ne pouvez commander que dans un seul food truck à la fois !");
+                return;
+            }
+
+            panier.push({ nom, prix, foodTruck: currentFoodTruck });
+            mettreAJourPanier();
+        }
+
+        // Mettre à jour le panier
+        function mettreAJourPanier() {
+            const panierList = document.getElementById('panier-list');
+            const totalPriceElement = document.getElementById('total-price');
+            panierList.innerHTML = '';
+            
+            let total = 0;
+            panier.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    ${item.nom} - ${item.prix}€ 
+                    <button onclick="supprimerDuPanier(${index})">🗑️</button>
+                `;
+                panierList.appendChild(li);
+                total += item.prix;
+            });
+
+            totalPriceElement.textContent = `${total}€`;
+        }
+
+        // Supprimer du panier
+        function supprimerDuPanier(index) {
+            panier.splice(index, 1);
+            mettreAJourPanier();
+        }
+
+        // Ajouter aux favoris
+        function ajouterAuxFavoris(nom, prix) {
+            const favorisContainer = document.getElementById('favoris-list');
+            
+            // Vérifier si le plat est déjà dans les favoris
+            if (!favoris.some(f => f.nom === nom)) {
+                const favori = { nom, prix, foodTruck: currentFoodTruck };
+                favoris.push(favori);
+
+                const favorisItem = document.createElement('div');
+                favorisItem.classList.add('food-item');
+                favorisItem.innerHTML = `
+                    <div class="food-desc">
+                        <h4>${nom}</h4>
+                        <p>Food Truck: ${currentFoodTruck}</p>
+                        <p class="food-desc-price">${prix}€</p>
+                    </div>
+                    <button class="add-btn" onclick="ajouterAuPanier('${nom}', ${prix})">Commander</button>
+                `;
+                favorisContainer.appendChild(favorisItem);
+            }
+        }
+
+        // Validation de commande
+        function validerCommande() {
+            if (panier.length === 0) {
+                alert("Votre panier est vide !");
+                return;
+            }
+
+            const recu = genererRecu();
+            alert("Votre commande est en cours d'acheminement vers votre table! 🛵");
+            const recuContainer = document.createElement('div');
+            recuContainer.innerHTML = recu;
+            document.getElementById('commandes').appendChild(recuContainer);
+            panier = [];
+            mettreAJourPanier();
+        }
+
+        // // Générer le reçu
+        function genererRecu() {
+            let contenuRecu = `
+                <div class="recu">
+                    <h3>Reçu de Commande</h3>
+                    <p>Food Truck: ${panier[0].foodTruck}</p>
+                    <ul>
+            `;
+            let total = 0;
+            panier.forEach(item => {
+                contenuRecu += `<li>${item.nom} - ${item.prix}€</li>`;
+                total += item.prix;
+            });
+            contenuRecu += `
+                    </ul>
+                    <strong>Total: ${total}€</strong>
+                    <p>Merci pour votre commande!</p>
+                </div>
+            `;
+            return contenuRecu;
+        }
+
+        // Initialisation
+        setupNavigation();
+        initCarte();
+        afficherPlats("Food Truck Courbevoie");
+    </script>
 </body>
 </html>
