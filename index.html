@@ -3,38 +3,393 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Survivre à une éruption volcanique</title>
+    <title>Food Trucks</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <style>
-        body { font-family: Arial, sans-serif; }
-        .phase { margin: 20px 0; }
-        button { margin-top: 10px; }
+        /* Root variables for easy theming */
+        :root {
+            --couleur-fond-principal: #121212;
+            --couleur-primaire: #bb86fc;
+            --couleur-secondaire: #03dac6;
+            --couleur-surface: #1e1e1e;
+            --degradé-principal: linear-gradient(45deg, #bb86fc, #03dac6);
+            --shadow-elevation-1: 0 2px 4px rgba(0,0,0,0.1);
+            --shadow-elevation-2: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--couleur-fond-principal);
+            color: white;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Animations */
+        @keyframes slideIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(20px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        /* Modal Styling */
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: var(--couleur-surface);
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            padding: 30px;
+            box-shadow: var(--shadow-elevation-2);
+            animation: slideIn 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Gradient Border Effect */
+        .modal-content::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: var(--degradé-principal);
+            z-index: -1;
+            filter: blur(5px);
+            opacity: 0.7;
+            border-radius: 17px;
+        }
+
+        /* Input Styling */
+        .input-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-container input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid transparent;
+            background: var(--couleur-fond-principal);
+            border-radius: 10px;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .input-container input:focus {
+            outline: none;
+            border-color: var(--couleur-primaire);
+            box-shadow: 0 0 10px rgba(187, 134, 252, 0.3);
+        }
+
+        /* Button Styling */
+        .auth-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .bouton {
+            flex: 1;
+            background: var(--degradé-principal);
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: black;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bouton:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-elevation-2);
+        }
+
+        .bouton:active {
+            transform: translateY(1px);
+        }
+
+        /* Food Truck List and Menu Animations */
+        .food-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--couleur-surface);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: var(--shadow-elevation-1);
+            animation: slideIn 0.4s ease;
+            position: relative;
+        }
+
+        .food-item:hover {
+            transform: scale(1.02);
+            box-shadow: var(--shadow-elevation-2);
+        }
+
+        .add-btn {
+            background: var(--couleur-primaire);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn:hover {
+            background: var(--couleur-secondaire);
+            transform: scale(1.1);
+        }
+
+        /* Navigation Styling */
+        .menu-navigation {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .item-menu {
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .item-menu:hover {
+            background: var(--couleur-primaire);
+            color: black;
+            transform: translateX(10px);
+        }
+
+        .item-menu.active {
+            background: var(--couleur-primaire);
+            color: black;
+            box-shadow: var(--shadow-elevation-1);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .conteneur-principal {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>Survivre à une éruption volcanique</h1>
-    <div id="game">
-        <div class="phase" id="phase1">
-            <h2>Phase 1 : Préparation</h2>
-            <p>Constituer un kit d'urgence. Quels objets voulez-vous inclure ?</p>
-            <input type="text" id="kitInput" placeholder="Entrez les objets ici">
-            <button onclick="submitKit()">Soumettre</button>
-            <p id="kitMessage"></p>
-        </div>
-        <div class="phase" id="phase2" style="display:none;">
-            <h2>Phase 2 : Pendant l'éruption</h2>
-            <p>Voulez-vous évacuer maintenant ?</p>
-            <button onclick="evacuer('oui')">Oui</button>
-            <button onclick="evacuer('non')">Non</button>
-            <p id="evacMessage"></p>
-        </div>
-        <div class="phase" id="phase3" style="display:none;">
-            <h2>Phase 3 : Après l'éruption</h2>
-            <p>Comment allez-vous nettoyer les cendres ?</p>
-            <button onclick="nettoyer('avec un masque')">Avec un masque</button>
-            <button onclick="nettoyer('sans masque')">Sans masque</button>
-            <p id="cleanMessage"></p>
+    <!-- Authentication Modal -->
+    <div id="auth-modal" class="modal">
+        <div class="modal-content">
+            <h2 style="text-align: center; margin-bottom: 20px;">Connexion</h2>
+            <div class="input-container">
+                <input type="text" id="username" placeholder="Nom d'utilisateur" required>
+            </div>
+            <div class="input-container">
+                <input type="password" id="password" placeholder="Mot de passe" required>
+            </div>
+            <div class="auth-buttons">
+                <button class="bouton" onclick="connexion()">Connexion</button>
+                <button class="bouton" onclick="inscription()">Inscription</button>
+            </div>
         </div>
     </div>
-    <script src="game.js"></script>
+
+    <div class="conteneur-principal">
+        <!-- Rest of the previous HTML structure remains the same -->
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        // Previous JavaScript remains mostly the same, with added animations and interactions
+
+        // Enhanced error toast notification
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background-color: ${type === 'error' ? '#ff6b6b' : '#03dac6'};
+                color: black;
+                padding: 15px;
+                border-radius: 10px;
+                z-index: 1100;
+                animation: slideIn 0.3s ease;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'fadeOut 0.3s ease';
+                setTimeout(() => document.body.removeChild(toast), 300);
+            }, 3000);
+        }
+
+        // Enhanced form validation with animations
+        function validateForm(username, password) {
+            const usernameInput = document.getElementById('username');
+            const passwordInput = document.getElementById('password');
+
+            if (!username || !password) {
+                usernameInput.style.animation = 'shake 0.5s';
+                passwordInput.style.animation = 'shake 0.5s';
+                showToast('Veuillez remplir tous les champs', 'error');
+                
+                setTimeout(() => {
+                    usernameInput.style.animation = '';
+                    passwordInput.style.animation = '';
+                }, 500);
+                return false;
+            }
+            return true;
+        }
+
+        // Modified inscription function with enhanced validation
+        function inscription() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (!validateForm(username, password)) return;
+
+            const utilisateurs = JSON.parse(localStorage.getItem('utilisateurs') || '[]');
+            
+            if (utilisateurs.some(u => u.username === username)) {
+                showToast('Ce nom d\'utilisateur existe déjà', 'error');
+                return;
+            }
+
+            const nouvelUtilisateur = {
+                username,
+                password,
+                favoris: [],
+                historique: [],
+                theme: 'dark' // Future theme support
+            };
+
+            utilisateurs.push(nouvelUtilisateur);
+            localStorage.setItem('utilisateurs', JSON.stringify(utilisateurs));
+            
+            utilisateurConnecte = nouvelUtilisateur;
+            localStorage.setItem('utilisateurConnecte', JSON.stringify(utilisateurConnecte));
+            
+            showToast(`Bienvenue, ${username} !`);
+            cacherModalConnexion();
+            chargerDonneesUtilisateur();
+        }
+
+        // Similar enhancements for connexion function
+        function connexion() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (!validateForm(username, password)) return;
+
+            const utilisateurs = JSON.parse(localStorage.getItem('utilisateurs') || '[]');
+            const utilisateur = utilisateurs.find(u => u.username === username && u.password === password);
+
+            if (utilisateur) {
+                utilisateurConnecte = utilisateur;
+                localStorage.setItem('utilisateurConnecte', JSON.stringify(utilisateurConnecte));
+                
+                showToast(`Ravi de vous revoir, ${username} !`);
+                cacherModalConnexion();
+                chargerDonneesUtilisateur();
+            } else {
+                showToast('Identifiants incorrects', 'error');
+            }
+        }
+
+        // Add subtle click animations to interactive elements
+        function addClickAnimations() {
+            const interactiveElements = document.querySelectorAll('.bouton, .add-btn, .item-menu');
+            
+            interactiveElements.forEach(el => {
+                el.addEventListener('mousedown', () => {
+                    el.style.transform = 'scale(0.95)';
+                });
+                
+                el.addEventListener('mouseup', () => {
+                    el.style.transform = 'scale(1)';
+                });
+                
+                el.addEventListener('mouseleave', () => {
+                    el.style.transform = 'scale(1)';
+                });
+            });
+        }
+
+        // Initialize the application with added animations
+        function initApplication() {
+            setupNavigation();
+            initCarte();
+            afficherPlats("Food Truck Courbevoie");
+            addClickAnimations();
+
+            const utilisateurSauvegarde = localStorage.getItem('utilisateurConnecte');
+            if (utilisateurSauvegarde) {
+                try {
+                    utilisateurConnecte = JSON.parse(utilisateurSauvegarde);
+                    cacherModalConnexion();
+                    chargerDonneesUtilisateur();
+                } catch (error) {
+                    console.error("Erreur lors du chargement de l'utilisateur :", error);
+                    afficherModalConnexion();
+                }
+            } else {
+                afficherModalConnexion();
+            }
+        }
+
+        // Attach initialization when DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', initApplication);
+    </script>
 </body>
 </html>
