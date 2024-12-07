@@ -6,100 +6,136 @@
     <title>Application Food Trucks</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <style>
+        /* Déclaration de variables de style pour les couleurs */
         :root {
-            --degradé-principal: linear-gradient(to right, #ff7e5f, #feb47b);
-            --couleur-surface: #f5f5f5;
+            --degradé-principal: linear-gradient(to right, #ff7e5f, #feb47b);  /* Dégradé pour les éléments principaux */
+            --couleur-surface: #f5f5f5;  /* Couleur de fond des sections secondaires */
+            --couleur-primaire: #ff6347; /* Couleur primaire des éléments interactifs */
+            --couleur-secondaire: #32cd32; /* Couleur secondaire pour les éléments */
         }
 
+        /* Mise en forme générale du corps de la page */
         body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background-color: #fff;
-            color: #333;
+            margin: 0;  /* Suppression des marges par défaut */
+            font-family: Arial, sans-serif;  /* Définition de la police de caractères */
+            background-color: #fff;  /* Couleur de fond de la page */
+            color: #333;  /* Couleur du texte principal */
         }
 
+        /* Structure principale contenant la sidebar et le contenu principal */
         .conteneur-principal {
-            display: flex;
+            display: flex;  /* Affichage flex pour aligner la sidebar et le contenu */
         }
 
+        /* Style de la sidebar */
         .sidebar {
-            width: 250px;
-            background: var(--degradé-principal);
-            padding: 20px;
-            color: white;
+            width: 250px;  /* Largeur fixe de la sidebar */
+            background: var(--degradé-principal);  /* Application du dégradé défini précédemment */
+            padding: 20px;  /* Espacement interne */
+            color: white;  /* Texte en blanc */
         }
 
+        /* Mise en forme du menu de navigation dans la sidebar */
         .menu-navigation {
-            list-style: none;
-            padding: 0;
+            list-style: none;  /* Suppression des puces des éléments de liste */
+            padding: 0;  /* Suppression du padding */
         }
 
+        /* Style des éléments du menu */
         .item-menu {
-            padding: 15px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            border-radius: 5px;
-            transition: background-color 0.3s;
+            padding: 15px;  /* Espacement interne des éléments de menu */
+            margin-bottom: 10px;  /* Espacement entre les éléments du menu */
+            cursor: pointer;  /* Curseur de souris indiquant un élément cliquable */
+            border-radius: 5px;  /* Coins arrondis */
+            transition: background-color 0.3s;  /* Effet de transition pour le changement de fond */
         }
 
+        /* Effet lors du survol de l'élément de menu ou lorsqu'il est actif */
         .item-menu:hover,
         .item-menu.active {
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.2);  /* Changement de fond au survol ou lorsqu'élément actif */
         }
 
+        /* Style du contenu principal de la page */
         main {
-            flex: 1;
-            padding: 20px;
-            background-color: #fff;
+            flex: 1;  /* Le contenu principal prend toute la place restante */
+            padding: 20px;  /* Espacement interne */
+            background-color: #fff;  /* Fond blanc */
         }
 
+        /* Style pour chaque section de contenu (page) */
         .contenu-page {
-            display: none;
+            display: none;  /* Masquer les sections par défaut */
         }
 
+        /* Affichage des sections actives */
         .contenu-page.active {
-            display: block;
+            display: block;  /* Afficher la section active */
         }
 
+        /* Styles spécifiques à la page de connexion */
         .connexion-container {
             display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: var(--couleur-surface);
+            justify-content: center;  /* Centrer horizontalement */
+            align-items: center;  /* Centrer verticalement */
+            height: 100vh;  /* Prendre toute la hauteur de la fenêtre */
+            background-color: var(--couleur-surface);  /* Couleur de fond claire */
         }
 
         .connexion-box {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            text-align: center;
+            background: white;  /* Fond blanc */
+            padding: 20px;  /* Espacement interne */
+            border-radius: 10px;  /* Coins arrondis */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);  /* Ombre portée légère */
+            text-align: center;  /* Centrage du texte */
         }
 
         .connexion-box input {
-            width: calc(100% - 20px);
-            padding: 10px;
-            margin-bottom: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
+            width: calc(100% - 20px);  /* Champ de saisie prenant toute la largeur */
+            padding: 10px;  /* Espacement interne des champs */
+            margin-bottom: 10px;  /* Espacement entre les champs */
+            border: 1px solid #ccc;  /* Bordure grise */
+            border-radius: 5px;  /* Coins arrondis */
         }
 
         .connexion-box button {
-            background: var(--degradé-principal);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
+            background: var(--degradé-principal);  /* Application du dégradé comme fond du bouton */
+            color: white;  /* Texte en blanc */
+            border: none;  /* Suppression de la bordure par défaut */
+            padding: 10px 20px;  /* Espacement interne du bouton */
+            border-radius: 5px;  /* Coins arrondis */
+            cursor: pointer;  /* Curseur en forme de main */
         }
 
         .connexion-box button:hover {
-            opacity: 0.9;
+            opacity: 0.9;  /* Légère diminution de l'opacité lors du survol */
+        }
+
+        /* Caractéristiques de la carte de localisation */
+        #carte-food-trucks {
+            width: 100%;
+            height: 400px;
+            border: 1px solid #ccc;
+            margin-top: 20px;
+            border-radius: 10px;
+        }
+
+        /* Responsiveness : Ajustement des éléments sur petits écrans */
+        @media (max-width: 768px) {
+            .conteneur-principal {
+                flex-direction: column;  /* Empiler la sidebar et le contenu */
+            }
+            .sidebar {
+                width: 100%;
+            }
+            main {
+                padding: 10px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Page de Connexion -->
     <div id="connexion" class="connexion-container">
         <div class="connexion-box">
             <h2>Connexion</h2>
@@ -109,6 +145,7 @@
         </div>
     </div>
 
+    <!-- Conteneur principal de l'application -->
     <div id="app" class="conteneur-principal" style="display: none;">
         <aside class="sidebar">
             <nav class="menu-navigation">
@@ -118,10 +155,12 @@
                 <div class="item-menu" data-page="plats">🍔 Plats</div>
             </nav>
         </aside>
+
+        <!-- Contenu principal de l'application -->
         <main>
             <section id="carte" class="contenu-page active">
                 <h2>Carte des Food Trucks</h2>
-                <div id="carte-food-trucks" style="height: 400px;"></div>
+                <div id="carte-food-trucks"></div>
             </section>
             <section id="commandes" class="contenu-page">
                 <h2>Mes Commandes</h2>
@@ -139,48 +178,57 @@
     </div>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
-        // Gestion de la connexion
+        // Fonction de gestion de la connexion
         function connecter() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
 
+            // Vérification des identifiants (à remplacer par un vrai système d'authentification dans un vrai projet)
             if (username === "admin" && password === "admin") {
+                // Si les identifiants sont corrects, on cache la page de connexion et on affiche l'application
                 document.getElementById('connexion').style.display = "none";
                 document.getElementById('app').style.display = "flex";
-                initApp();
+                initApp();  // Initialisation de l'application après connexion réussie
             } else {
                 alert("Identifiants incorrects !");
             }
         }
 
-        // Initialisation de l'application après connexion
+        // Fonction d'initialisation de l'application après la connexion
         function initApp() {
-            setupNavigation();
-            initCarte();
+            setupNavigation();  // Configuration de la navigation
+            initCarte();  // Initialisation de la carte
         }
 
-        // Gestion de la navigation
+        // Fonction de gestion de la navigation dans l'application
         function setupNavigation() {
             const menuItems = document.querySelectorAll('.item-menu');
-            const pages = document.querySelectorAll('.contenu-page');
-
             menuItems.forEach(item => {
                 item.addEventListener('click', () => {
-                    menuItems.forEach(menu => menu.classList.remove('active'));
-                    item.classList.add('active');
+                    // Masquer toutes les sections de contenu
+                    document.querySelectorAll('.contenu-page').forEach(page => {
+                        page.classList.remove('active');
+                    });
 
-                    const targetPage = item.dataset.page;
-                    pages.forEach(page => page.classList.remove('active'));
-                    document.getElementById(targetPage).classList.add('active');
+                    // Afficher la section correspondante
+                    const pageId = item.getAttribute('data-page');
+                    document.getElementById(pageId).classList.add('active');
+
+                    // Mettre à jour l'état actif du menu
+                    menuItems.forEach(i => i.classList.remove('active'));
+                    item.classList.add('active');
                 });
             });
         }
 
-        // Initialisation de la carte Leaflet
+        // Fonction d'initialisation de la carte avec Leaflet
         function initCarte() {
             const map = L.map('carte-food-trucks').setView([48.8566, 2.3522], 12);
+
+            // Ajout des tuiles de la carte avec OpenStreetMap
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
+            // Ajout d'un marqueur sur la position de Paris
             const marker = L.marker([48.8566, 2.3522]).addTo(map)
                 .bindPopup("Food Truck Paris")
                 .openPopup();
@@ -188,3 +236,4 @@
     </script>
 </body>
 </html>
+
